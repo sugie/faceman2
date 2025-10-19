@@ -1,0 +1,89 @@
+version: '3.8'
+volumes:
+    fm2_mysql_db_volume: {}
+    storage-volumes:
+    vendor-volumes:
+
+networks:
+  fm2_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.140.0.0/16"
+
+services:
+
+  fm2_phpmyadmin:
+    build: ./docker_settings/phpmyadmin/.
+    container_name: fm2_phpmyadmin
+    networks:
+      fm2_network:
+        ipv4_address: 172.140.0.3
+    environment:
+      PMA_HOST: fm2_mysql
+    ports:
+      - '6343:80'
+
+  fm2_mysql:
+    container_name: fm2_mysql
+    build: ./docker_settings/mysql/.
+    platform: linux/x86_64 #Mac M1
+    networks:
+      fm2_network:
+        ipv4_address: 172.140.0.2
+    volumes:
+      - fm2_mysql_db_volume:/var/lib/mysql
+      # docker-entrypoint-initdb.dに拡張子が.sh .sqlのファイルを配置しておくと、DBコンテナ開始時にファイルをアルファベット順に実行してくれます。
+      - ./docker_settings/mysql/scripts:/docker-entrypoint-initdb.d
+    environment:
+        MYSQL_ROOT_PASSWORD: 'ohGhohf!4aibeipha41'
+        TZ: 'Asia/Tokyo'
+
+    ports:
+      - '6142:3306'
+    command:  >
+      bash -c '
+      echo "＃＃＃＃＃ Hello from myservice! ＃＃＃＃＃";
+      echo "＃＃＃＃＃ FromMAC: mycli -hlocalhost -P6142 -uroot ＃＃＃＃＃";
+      echo "＃＃＃＃＃ FromMAC: docker-compose logs -f ＃＃＃＃＃";
+
+      touch /var/log/general.log &&
+      chown mysql:mysql /var/log/general.log &&
+      tail -f /var/log/general.log &
+      /entrypoint.sh mysqld
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --general-log=true
+      --general-log-file=/var/log/general.log
+      '
+    logging:
+      options:
+        max-size: "10k"
+        max-file: "5"
+
+  fm2_httpd:
+    build: ./docker_settings/httpd/.
+    container_name: fm2_httpd
+    networks:
+      fm2_network:
+        ipv4_address: 172.140.0.4
+    volumes:
+      - .:/var/www/html
+      - ./docker_settings/httpd/laravel.ini:/usr/local/etc/php/conf.d/laravel.ini
+      - ./docker_settings/httpd/php.ini:/usr/local/etc/php/php.ini
+      - storage-volumes:/var/www/html/storage/framework
+      - vendor-volumes:/var/www/html/vendor
+
+    ports:
+      - '6144:80'
+
+
+  fm2_redis:
+    build: ./docker_settings/redis/.
+    container_name: fm2_redis
+    ports:
+      - "6345:6345"  # Maps port 6345 on the host to port 6345 in the container
+    networks:
+      fm2_network:
+        ipv4_address: 172.140.0.5

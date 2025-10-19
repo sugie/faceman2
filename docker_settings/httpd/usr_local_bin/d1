@@ -1,0 +1,2 @@
+/usr/bin/openssl enc -aes-256-cbc  -md md5 -iter 100 -d -in ./$1 -out ./$1.dec --pass env:enpw
+

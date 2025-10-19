@@ -1,0 +1,17 @@
+export LANG=ja_JP.UTF-8
+export HISTTIMEFORMAT='%F %T '
+HISTSIZE=100000
+HISTFILESIZE=200000
+alias grep='grep -s -i --color'
+alias hi='history'
+
+alias ms="mycli -hfm2_mysql -uroot"
+alias msm="mysql -hfm2_mysql -uroot"
+alias mss="mysqlshow -hfm2_mysql -uroot"
+
+alias llog="tail -f `ls -1tr /var/www/html/storage/logs/laravel*.log | tail -n 1`"
+
+alias ww='sudo -u www-data $1'
+
+export enpw="Kamiyugi#1984"
+

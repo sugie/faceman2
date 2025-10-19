@@ -1,0 +1,1 @@
+alias mlog="tail -f /var/log/general.log"

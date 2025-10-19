@@ -1,0 +1,2 @@
+open -a waterfox http://localhost:6144/
+
