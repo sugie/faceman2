@@ -1,5 +1,5 @@
 #
-$Url = "localhost:6144"
+$Url = "localhost:6344"
 
 # Waterfox の実行ファイルのパス
 $WaterfoxPath = "C:\Program Files\Waterfox\waterfox.exe"
