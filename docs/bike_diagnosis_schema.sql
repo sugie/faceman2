@@ -1,0 +1,95 @@
+
+-- Bike Diagnosis Schema (MySQL 8+)
+CREATE TABLE users (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100),
+  email VARCHAR(191) UNIQUE,
+  password VARCHAR(191),
+  created_at TIMESTAMP NULL,
+  updated_at TIMESTAMP NULL
+);
+
+CREATE TABLE profiles (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  height_cm SMALLINT NULL,
+  weight_kg SMALLINT NULL,
+  inseam_cm SMALLINT NULL,
+  experience_years DECIMAL(3,1) NULL,
+  region VARCHAR(100) NULL,
+  license ENUM('原付','小型限定','普通二輪','大型') NULL,
+  preferences JSON NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE genres (
+  id TINYINT UNSIGNED PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE questions (
+  id SMALLINT UNSIGNED PRIMARY KEY,
+  section VARCHAR(50) NOT NULL,
+  body VARCHAR(255) NOT NULL,
+  answer_type ENUM('single','multi') NOT NULL DEFAULT 'single'
+);
+
+CREATE TABLE options (
+  id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  question_id SMALLINT UNSIGNED NOT NULL,
+  label VARCHAR(100) NOT NULL,
+  FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+-- 重み付け（質問の選択肢 → ジャンルへスコア）
+CREATE TABLE weights (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  question_id SMALLINT UNSIGNED NOT NULL,
+  option_id INT UNSIGNED NOT NULL,
+  genre_id TINYINT UNSIGNED NOT NULL,
+  score TINYINT UNSIGNED NOT NULL, -- 0-5
+  UNIQUE KEY uq_weight (question_id, option_id, genre_id),
+  FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
+  FOREIGN KEY (option_id) REFERENCES options(id) ON DELETE CASCADE,
+  FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
+);
+
+CREATE TABLE diagnoses (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  summary JSON NULL, -- 上位3、レーダー用配列など
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE answers (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  diagnosis_id BIGINT UNSIGNED NOT NULL,
+  question_id SMALLINT UNSIGNED NOT NULL,
+  option_id INT UNSIGNED NOT NULL,
+  FOREIGN KEY (diagnosis_id) REFERENCES diagnoses(id) ON DELETE CASCADE,
+  FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
+  FOREIGN KEY (option_id) REFERENCES options(id) ON DELETE CASCADE
+);
+
+CREATE TABLE diagnosis_scores (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  diagnosis_id BIGINT UNSIGNED NOT NULL,
+  genre_id TINYINT UNSIGNED NOT NULL,
+  score SMALLINT UNSIGNED NOT NULL,
+  rank TINYINT UNSIGNED NULL,
+  FOREIGN KEY (diagnosis_id) REFERENCES diagnoses(id) ON DELETE CASCADE,
+  FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_diag_genre (diagnosis_id, genre_id)
+);
+
+CREATE TABLE recommendations (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  genre_id TINYINT UNSIGNED NOT NULL,
+  type ENUM('入門講座','安全講座','整備講座','記事','動画','イベント') NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  url VARCHAR(500) NULL,
+  region VARCHAR(100) NULL,
+  meta JSON NULL,
+  FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
+);

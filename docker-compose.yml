@@ -37,15 +37,15 @@ services:
       # docker-entrypoint-initdb.dに拡張子が.sh .sqlのファイルを配置しておくと、DBコンテナ開始時にファイルをアルファベット順に実行してくれます。
       - ./docker_settings/mysql/scripts:/docker-entrypoint-initdb.d
     environment:
-        MYSQL_ROOT_PASSWORD: 'ohGhohf!4aibeipha41'
+        MYSQL_ROOT_PASSWORD: 'Ohce#N1eiL2i'
         TZ: 'Asia/Tokyo'
 
     ports:
-      - '6142:3306'
+      - '6342:3306'
     command:  >
       bash -c '
       echo "＃＃＃＃＃ Hello from myservice! ＃＃＃＃＃";
-      echo "＃＃＃＃＃ FromMAC: mycli -hlocalhost -P6142 -uroot ＃＃＃＃＃";
+      echo "＃＃＃＃＃ FromMAC: mycli -hlocalhost -P6342 -uroot ＃＃＃＃＃";
       echo "＃＃＃＃＃ FromMAC: docker-compose logs -f ＃＃＃＃＃";
 
       touch /var/log/general.log &&
@@ -76,7 +76,7 @@ services:
       - vendor-volumes:/var/www/html/vendor
 
     ports:
-      - '6144:80'
+      - '6344:80'
 
 
   fm2_redis:
