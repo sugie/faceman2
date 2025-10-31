@@ -2,10 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Test1Controller;
+use App\Http\Controllers\BikeFit\TopController;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/bikefit', [TopController::class, 'index'])->name('bikefit.index');
 
 // /test1 のテストページ
 Route::get('/test1', [Test1Controller::class, 'index'])->name('test1.index');

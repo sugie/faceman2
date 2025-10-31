@@ -40,7 +40,7 @@ return new class extends Migration {
         // bf_genres
         Schema::create('bf_genres', function (Blueprint $table) {
             $table->tinyIncrements('id');
-            $table->string('name', 50)->unique();
+            $table->string('name')->unique();
         });
 
         // bf_questions
@@ -54,6 +54,7 @@ return new class extends Migration {
         // bf_options
         Schema::create('bf_options', function (Blueprint $table) {
             $table->id();
+            $table->smallInteger('sno')->comment('質問内連番');
             $table->foreignId('question_id')->constrained('bf_questions', 'id')->onDelete('cascade');
             $table->string('label', 100);
         });
