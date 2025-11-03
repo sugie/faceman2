@@ -29,7 +29,7 @@
 <header>
     <div class="container">
         <h1>BikeFit</h1>
-        <p class="lead">あなたに合う自転車スタイルを見つける診断サービス</p>
+        <p class="lead">あなたに合うオートバイスタイルを見つける診断サービス</p>
     </div>
 </header>
 <main class="container">

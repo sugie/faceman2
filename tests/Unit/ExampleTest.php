@@ -2,15 +2,14 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
+use App\Models\User;
 
-class ExampleTest extends TestCase
+class ExampleTest extends \Tests\TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_that_true_is_true(): void
+    public function test_one()
     {
+        $obj = User::first();
+        #$this->assertNotEmpty($obj);
         $this->assertTrue(true);
     }
 }
