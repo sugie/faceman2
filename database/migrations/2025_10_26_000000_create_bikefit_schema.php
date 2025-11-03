@@ -15,8 +15,9 @@ return new class extends Migration {
         Schema::create('bf_users', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100)->nullable();
-            $table->string('email', 191)->unique();
-            $table->string('password', 191);
+            $table->string('email', 191)->nullable()->unique();
+            $table->string('password', 191)->nullable();
+            $table->string('visitor_id', 100)->nullable()->comment('匿名ユーザー識別ID');
             $table->timestamps();
         });
         DB::statement("ALTER TABLE bf_users COMMENT 'Bike fit users'");

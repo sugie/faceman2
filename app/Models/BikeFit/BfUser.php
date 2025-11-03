@@ -26,7 +26,7 @@ class BfUser extends Model
      * @var array<int,string>
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'password', 'visitor_id'
     ];
 
     /**
