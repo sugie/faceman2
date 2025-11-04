@@ -39,7 +39,7 @@
         <p style="margin:0; color: var(--muted);">いくつかの質問に答えるだけで、あなたに最適なバイクタイプやセッティングの方向性を提案します。</p>
         <div class="actions">
             <!-- 診断開始。実装前はプレースホルダー。後で実際のルートに差し替えます。 -->
-            <a href="#" class="button" onclick="alert('診断フローは未実装です。後続タスクで追加します。'); return false;">診断をはじめる</a>
+            <a href="{{route('bikefit.answer')}}" class="button">診断をはじめる</a>
             <a href="#about" class="button secondary">BikeFitとは</a>
         </div>
         <div class="grid" style="margin-top:24px;">
@@ -60,7 +60,8 @@
 
     <section id="about" class="panel">
         <h2 style="margin:0 0 8px; font-size:20px;">BikeFitとは</h2>
-        <p class="lead" style="margin:0;">ライフスタイルや体格、目的に合わせて、最適なバイクタイプを見つけるための診断ツールです。</p>
+        <p class="lead" style="margin:0;">
+            ライフスタイルや体格、目的に合わせて、最適なバイクタイプを見つけるための診断ツールです。</p>
         <div style="margin-top:12px; color: var(--muted); font-size:14px; line-height:1.8;">
             <!-- ストーリー性のある説明を短く。詳細は docs/ に配置予定。 -->
             近所の買い物からロングライドまで、あなたの「こうしたい」を起点に設計された質問票に答えることで、<br>

@@ -15,7 +15,7 @@ class BfProfile extends Model
     public $timestamps = true; // created_at, updated_at あり
 
     protected $fillable = [
-        'bf_user_id', 'height_cm', 'weight_kg', 'inseam_cm', 'experience_years', 'region', 'license', 'preferences',
+        'bf_user_id', 'height_cm', 'weight_kg', 'inseam_cm', 'experience_years', 'region', 'license', 'preferences','updated_at', 'created_at'
     ];
 
     protected $casts = [

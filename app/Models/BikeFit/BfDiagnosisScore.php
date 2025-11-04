@@ -15,7 +15,7 @@ class BfDiagnosisScore extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'diagnosis_id', 'genre_id', 'score', 'rank',
+        'diagnosis_id', 'genre_id', 'score', 'rank','updated_at', 'created_at'
     ];
 
     public function diagnosis(): BelongsTo

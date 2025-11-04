@@ -14,7 +14,7 @@ class BfGenre extends Model
 
     public $timestamps = false; // タイムスタンプなし
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name','updated_at', 'created_at'];
 
     public function weights(): HasMany
     {

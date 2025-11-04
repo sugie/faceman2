@@ -15,7 +15,7 @@ class BfQuestion extends Model
     public $timestamps = false; // タイムスタンプなし
 
     protected $fillable = [
-        'section', 'body', 'answer_type',
+        'section', 'body', 'answer_type','updated_at', 'created_at'
     ];
 
     public function options(): HasMany

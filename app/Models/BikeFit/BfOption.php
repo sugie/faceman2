@@ -16,7 +16,7 @@ class BfOption extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'sno', 'question_id', 'label',
+        'sno', 'question_id', 'label','updated_at', 'created_at'
     ];
 
     public function question(): BelongsTo

@@ -16,7 +16,7 @@ class BfDiagnosis extends Model
     public $timestamps = false; // created_atのみ。updated_atなし
 
     protected $fillable = [
-        'bf_user_id', 'created_at', 'summary',
+        'bf_user_id', 'summary', 'updated_at', 'created_at'
     ];
 
     protected $casts = [

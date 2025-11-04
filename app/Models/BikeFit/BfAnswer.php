@@ -15,12 +15,17 @@ class BfAnswer extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'diagnosis_id', 'question_id', 'option_id',
+        'bf_user_id', 'bf_diagnosis_id', 'question_id', 'option_id', 'updated_at', 'created_at'
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(BfUser::class, 'bf_user_id');
+    }
 
     public function diagnosis(): BelongsTo
     {
-        return $this->belongsTo(BfDiagnosis::class, 'diagnosis_id');
+        return $this->belongsTo(BfDiagnosis::class, 'bf_diagnosis_id');
     }
 
     public function question(): BelongsTo

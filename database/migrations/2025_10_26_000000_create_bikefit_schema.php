@@ -42,6 +42,7 @@ return new class extends Migration {
         Schema::create('bf_genres', function (Blueprint $table) {
             $table->tinyIncrements('id');
             $table->string('name')->unique();
+            $table->timestamps();
         });
 
         // bf_questions
@@ -50,6 +51,7 @@ return new class extends Migration {
             $table->string('section', 50);
             $table->string('body', 255);
             $table->enum('answer_type', ['single', 'multi'])->default('single');
+            $table->timestamps();
         });
 
         // bf_options
@@ -58,6 +60,7 @@ return new class extends Migration {
             $table->smallInteger('sno')->comment('質問内連番');
             $table->foreignId('question_id')->constrained('bf_questions', 'id')->onDelete('cascade');
             $table->string('label', 100);
+            $table->timestamps();
         });
 
         // bf_weights
@@ -69,22 +72,25 @@ return new class extends Migration {
             $table->unsignedTinyInteger('score');
             $table->unique(['question_id', 'option_id', 'genre_id'], 'uq_weight');
             $table->foreign('genre_id')->references('id')->on('bf_genres')->onDelete('cascade');
+            $table->timestamps();
         });
 
         // bf_diagnoses
         Schema::create('bf_diagnoses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('bf_user_id')->nullable()->constrained('bf_users')->nullOnDelete();
-            $table->timestamp('created_at')->useCurrent();
             $table->json('summary')->nullable(); // 上位3・レーダー配列
+            $table->timestamps();
         });
 
         // bf_answers
         Schema::create('bf_answers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('diagnosis_id')->constrained('bf_diagnoses')->onDelete('cascade');
+            $table->foreignId('bf_user_id')->nullable()->constrained('bf_users')->nullOnDelete();
+            $table->foreignId('bf_diagnosis_id')->constrained('bf_diagnoses')->onDelete('cascade');
             $table->foreignId('question_id')->constrained('bf_questions')->onDelete('cascade');
             $table->foreignId('option_id')->constrained('bf_options', 'id')->onDelete('cascade');
+            $table->timestamps();
         });
 
         // bf_diagnosis_scores
@@ -96,6 +102,7 @@ return new class extends Migration {
             $table->unsignedTinyInteger('rank')->nullable();
             $table->unique(['diagnosis_id', 'genre_id'], 'uq_diag_genre');
             $table->foreign('genre_id')->references('id')->on('bf_genres')->onDelete('cascade');
+            $table->timestamps();
         });
 
         // bf_recommendations
@@ -108,6 +115,7 @@ return new class extends Migration {
             $table->string('region', 100)->nullable();
             $table->json('meta')->nullable();
             $table->foreign('genre_id')->references('id')->on('bf_genres')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 

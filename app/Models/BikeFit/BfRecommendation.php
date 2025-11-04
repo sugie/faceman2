@@ -15,7 +15,7 @@ class BfRecommendation extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'genre_id', 'type', 'title', 'url', 'region', 'meta',
+        'genre_id', 'type', 'title', 'url', 'region', 'meta','updated_at', 'created_at'
     ];
 
     protected $casts = [
