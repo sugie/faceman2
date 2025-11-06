@@ -9,6 +9,7 @@ use App\Models\BikeFit\BfDiagnosis;
 use App\Models\BikeFit\BfAnswer;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 
 class AnswerController extends Controller
 {
@@ -26,12 +27,23 @@ class AnswerController extends Controller
         }
         $bfUser = BfUser::where('visitor_id', $visitor)->first();
 
-        $bf_progress = session(self::PROGRESS_SESSION_KEY, 1);
+        $bf_progress = session(self::PROGRESS_SESSION_KEY, 0);
         session([self::PROGRESS_SESSION_KEY => $bf_progress]);
+        if ($bf_progress == 0) {
+            $result = DB::select("SELECT id FROM bf_questions ORDER BY id", []);
+            $question_id_list = array_map(function ($item) {
+                return $item->id;
+            }, $result);
+            session(['bikefit_question_id_list' => $question_id_list]);
+
+        } else {
+            $question_id_list = session('bikefit_question_id_list', []);
+
+        }
 
         $bf_diagnosis_id = session(TopController::BIKEFIT_DIAGNOSIS_ID_KEY);
 
-        $question = BfQuestion::where('id', '=', $bf_progress)->with('options')->first();
+        $question = BfQuestion::where('id', '=', $question_id_list[$bf_progress])->with('options')->first();
 
         return view('bikefit.answer', [
             'question' => $question,
@@ -49,7 +61,6 @@ class AnswerController extends Controller
         $bf_progress++;
         session([self::PROGRESS_SESSION_KEY => $bf_progress]);
         $bf_diagnosis_id = session(TopController::BIKEFIT_DIAGNOSIS_ID_KEY);
-
         $visitor = session(TopController::VISITOR_SESSION_KEY);
         if (!$visitor) {
             // bikefit.indexに遷移

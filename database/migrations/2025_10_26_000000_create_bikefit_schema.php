@@ -40,7 +40,7 @@ return new class extends Migration {
 
         // bf_genres
         Schema::create('bf_genres', function (Blueprint $table) {
-            $table->tinyIncrements('id');
+            $table->id('id');
             $table->string('name')->unique();
             $table->timestamps();
         });
@@ -48,6 +48,7 @@ return new class extends Migration {
         // bf_questions
         Schema::create('bf_questions', function (Blueprint $table) {
             $table->id('id');
+            $table->smallInteger('ono')->comment('表示順番');
             $table->string('section', 50);
             $table->string('body', 255);
             $table->enum('answer_type', ['single', 'multi'])->default('single');
@@ -68,8 +69,8 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('question_id')->constrained('bf_questions')->onDelete('cascade');
             $table->foreignId('option_id')->constrained('bf_options', 'id')->onDelete('cascade');
-            $table->unsignedTinyInteger('genre_id');
-            $table->unsignedTinyInteger('score');
+            $table->unsignedBigInteger('genre_id');
+            $table->unsignedInteger('score');
             $table->unique(['question_id', 'option_id', 'genre_id'], 'uq_weight');
             $table->foreign('genre_id')->references('id')->on('bf_genres')->onDelete('cascade');
             $table->timestamps();
@@ -97,9 +98,9 @@ return new class extends Migration {
         Schema::create('bf_diagnosis_scores', function (Blueprint $table) {
             $table->id();
             $table->foreignId('diagnosis_id')->constrained('bf_diagnoses')->onDelete('cascade');
-            $table->unsignedTinyInteger('genre_id');
-            $table->unsignedSmallInteger('score');
-            $table->unsignedTinyInteger('rank')->nullable();
+            $table->unsignedBigInteger('genre_id');
+            $table->unsignedInteger('score');
+            $table->unsignedInteger('rank')->nullable();
             $table->unique(['diagnosis_id', 'genre_id'], 'uq_diag_genre');
             $table->foreign('genre_id')->references('id')->on('bf_genres')->onDelete('cascade');
             $table->timestamps();
@@ -108,7 +109,7 @@ return new class extends Migration {
         // bf_recommendations
         Schema::create('bf_recommendations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedTinyInteger('genre_id');
+            $table->unsignedBigInteger('genre_id');
             $table->enum('type', ['入門講座', '安全講座', '整備講座', '記事', '動画', 'イベント']);
             $table->string('title', 200);
             $table->string('url', 500)->nullable();

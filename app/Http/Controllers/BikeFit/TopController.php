@@ -39,10 +39,9 @@ class TopController extends Controller
             // カラのbf_diagnosesを作成する
             $bf_diagnosis = BfDiagnosis::create(['bf_user_id' => $bf_user->id, 'updated_at' => now(), 'created_at' => now(),]);
             session([self::BIKEFIT_DIAGNOSIS_ID_KEY => $bf_diagnosis->id]);
-
-
         }
 
+        session([AnswerController::PROGRESS_SESSION_KEY => 0]);
         // #BFT01: BikeFitトップを表示するだけ。将来的にA/Bテストや案内文の取得を追加する余地あり。
         return view('bikefit.index');
     }
