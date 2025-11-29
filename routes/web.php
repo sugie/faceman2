@@ -15,6 +15,9 @@ Route::get('/bikefit/answer', [AnswerController::class, 'index'])->name('bikefit
 Route::post('/bikefit/answer', [AnswerController::class, 'store'])->name('bikefit.answer.store');
 Route::get('/bikefit/result', [ResultController::class, 'show'])->name('bikefit.result');
 
+
+
+
 // /test1 のテストページ
 Route::get('/test1', [Test1Controller::class, 'index'])->name('test1.index');
 

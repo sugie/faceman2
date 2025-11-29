@@ -26,20 +26,23 @@ class ResultController extends Controller
         $bf_diagnosis_id = session(TopController::BIKEFIT_DIAGNOSIS_ID_KEY);
 
         $genre_scores = BfWeight::getDiagnostic($bf_diagnosis_id, null);
-        $betOneGunreId = BikefitService::getBestOne($genre_scores);
+        $bestOneGenruId = BikefitService::getBestOne($genre_scores);
 
         logger()->info('#RC31: 診断結果画面表示', [
             'visitor' => $visitor,
             'bf_user_id' => $bfUser->id,
             'bf_diagnosis_id' => $bf_diagnosis_id,
-            'best_genre_id' => $betOneGunreId,
+            'best_genre_id' => $bestOneGenruId,
             'genre_scores' => $genre_scores,
         ]);
+
+        $genre_descriptions = BikefitService::getResultDescription($bestOneGenruId);
 
         // 単純に選択肢ラベルとスコア（存在すれば）をビューに渡す
         return view('bikefit.result', [
             'genre_scores' => $genre_scores,
-            'best_genre_id' => $betOneGunreId,
+            'best_genre_id' => $bestOneGenruId,
+            'genre_descriptions' => $genre_descriptions,
         ]);
     }
 }

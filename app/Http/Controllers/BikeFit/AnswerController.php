@@ -38,7 +38,6 @@ class AnswerController extends Controller
 
         } else {
             $question_id_list = session('bikefit_question_id_list', []);
-
         }
 
         $bf_diagnosis_id = session(TopController::BIKEFIT_DIAGNOSIS_ID_KEY);
@@ -60,6 +59,7 @@ class AnswerController extends Controller
         $bf_progress = session(self::PROGRESS_SESSION_KEY);
         $bf_progress++;
         session([self::PROGRESS_SESSION_KEY => $bf_progress]);
+        $question_id_list = session('bikefit_question_id_list', []);
         $bf_diagnosis_id = session(TopController::BIKEFIT_DIAGNOSIS_ID_KEY);
         $visitor = session(TopController::VISITOR_SESSION_KEY);
         if (!$visitor) {
@@ -84,8 +84,9 @@ class AnswerController extends Controller
         ]);
 
         $max_id = BfQuestion::max('id');
-        //if ($bf_progress == $max_id) {
-        if ($bf_progress == 2) {
+//        dd([__FILE__, __LINE__, $question_id_list, $bf_progress, $max_id, $question_id_list[count($question_id_list) - 1]]);
+        if (count($question_id_list) <= $bf_progress) {
+//        if ($bf_progress == 2) {
             // 最後の質問に回答した場合、診断結果ページへリダイレクト
             // 診断レコードを作成
             return redirect()->route('bikefit.result', []);
