@@ -16,7 +16,9 @@ Route::post('/bikefit/answer', [AnswerController::class, 'store'])->name('bikefi
 Route::get('/bikefit/result', [ResultController::class, 'show'])->name('bikefit.result');
 
 
-
+Route::get('/tyukosyaerabi',function() {return view('tyukosyaerabi.index');})->name('tyukosyaerabi.index');
+Route::get('/tyukosyaerabi/answer',function() {return view('tyukosyaerabi.answer');})->name('tyukosyaerabi.answer');
+Route::get('/tyukosyaerabi/result',function() {return view('tyukosyaerabi.result');})->name('tyukosyaerabi.result');
 
 // /test1 のテストページ
 Route::get('/test1', [Test1Controller::class, 'index'])->name('test1.index');
