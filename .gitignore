@@ -56,3 +56,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
+# APIキー。公開リポジトリなので絶対にコミットしない。
+ios/Secrets.swift
+

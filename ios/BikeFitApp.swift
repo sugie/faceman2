@@ -25,7 +25,8 @@ struct MotorcycleApp: App {
 // MARK: - 配色
 // Web 版 (resources/views/bikefit/index.blade.php) の配色を踏襲する。
 
-private enum Palette {
+// AIComment.swift からも使うので private にしない。
+enum Palette {
     static let background = Color(red: 0.055, green: 0.063, blue: 0.075) // #0e1013
     static let panel      = Color(red: 0.082, green: 0.098, blue: 0.129) // #151922
     static let accent     = Color(red: 0.000, green: 0.820, blue: 0.698) // #00d1b2
@@ -68,6 +69,7 @@ struct RootView: View {
                 ResultView(
                     genre: BikeFitData.bestGenre(for: picked),
                     totals: BikeFitData.score(for: picked),
+                    picked: picked,
                     onRestart: start
                 )
             }
@@ -209,6 +211,7 @@ struct QuestionView: View {
 struct ResultView: View {
     let genre: Genre
     let totals: [Int]
+    let picked: [Choice]
     let onRestart: () -> Void
 
     /// 上位3ジャンル。診断の根拠を見せるため。
@@ -243,6 +246,11 @@ struct ResultView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                         .padding(.top, 20)
                 }
+
+                // AI による診断。ここが今回の目玉。
+                // 通信が失敗しても下の定型文とスコアは出るので、画面は壊れない。
+                AICommentCard(picked: picked, genre: genre)
+                    .padding(.top, 24)
 
                 Text(genre.detail)
                     .font(.body)
