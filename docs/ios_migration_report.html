@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>faceman2 iOS化 調査レポート</title>
+<style>
+  /* ── トークン: 明（既定） ───────────────────────────── */
+  :root {
+    --ground:      #f1f4f4;
+    --surface:     #ffffff;
+    --surface-2:   #e5eaeb;
+    --ink:         #121a1c;
+    --ink-2:       #47545a;
+    --ink-3:       #74838a;
+    --rule:        #d2dbdd;
+    --rule-strong: #b3c0c3;
+    --accent:      #0d6d7c;
+    --accent-ink:  #08525e;
+    --accent-soft: #dceff2;
+
+    --ok:          #1a6b4a;
+    --ok-soft:     #dcefe4;
+    --warn:        #8a5a06;
+    --warn-soft:   #f8ecd4;
+    --crit:        #a32c22;
+    --crit-soft:   #f7ddda;
+
+    --shadow:      0 1px 2px rgba(18, 26, 28, .06);
+
+    --font-display: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", "Songti SC", Georgia, serif;
+    --font-body:    "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", Meiryo, "Noto Sans JP", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono:    ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas, "Noto Sans Mono", monospace;
+
+    --measure: 780px;
+  }
+
+  /* ── トークン: 暗（OS 設定が dark、かつ明示指定が light でない） ── */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0d1315;
+      --surface:     #141c1f;
+      --surface-2:   #1c262a;
+      --ink:         #e5edee;
+      --ink-2:       #a6b5b9;
+      --ink-3:       #7a8a8f;
+      --rule:        #293539;
+      --rule-strong: #3a4a4f;
+      --accent:      #56c4d6;
+      --accent-ink:  #8bdcea;
+      --accent-soft: #10333a;
+
+      --ok:          #4cc38a;
+      --ok-soft:     #122e23;
+      --warn:        #e0a53f;
+      --warn-soft:   #33270e;
+      --crit:        #ef7b6f;
+      --crit-soft:   #371a17;
+
+      --shadow:      0 1px 2px rgba(0, 0, 0, .4);
+    }
+  }
+
+  /* ── トークン: 暗（明示指定） ─────────────────────── */
+  :root[data-theme="dark"] {
+    --ground:      #0d1315;
+    --surface:     #141c1f;
+    --surface-2:   #1c262a;
+    --ink:         #e5edee;
+    --ink-2:       #a6b5b9;
+    --ink-3:       #7a8a8f;
+    --rule:        #293539;
+    --rule-strong: #3a4a4f;
+    --accent:      #56c4d6;
+    --accent-ink:  #8bdcea;
+    --accent-soft: #10333a;
+
+    --ok:          #4cc38a;
+    --ok-soft:     #122e23;
+    --warn:        #e0a53f;
+    --warn-soft:   #33270e;
+    --crit:        #ef7b6f;
+    --crit-soft:   #371a17;
+
+    --shadow:      0 1px 2px rgba(0, 0, 0, .4);
+  }
+
+  /* ── ベース ───────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16.5px;
+    line-height: 1.85;
+    font-feature-settings: "palt" 1;
+  }
+
+  .wrap {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  a {
+    color: var(--accent);
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+  }
+  a:hover { color: var(--accent-ink); }
+  a:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: .86em;
+    background: var(--surface-2);
+    padding: .12em .38em;
+    border-radius: 3px;
+    word-break: break-word;
+  }
+
+  /* ── 見出し ───────────────────────────────────── */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(30px, 5.4vw, 42px);
+    line-height: 1.34;
+    letter-spacing: .01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(21px, 3.4vw, 26px);
+    line-height: 1.45;
+    text-wrap: balance;
+    margin: 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  h3 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: .02em;
+    line-height: 1.6;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  p { margin: 0; }
+
+  /* ── レイアウト ───────────────────────────────── */
+  main    { display: flex; flex-direction: column; gap: 52px; }
+  section { display: flex; flex-direction: column; gap: 18px; }
+
+  /* ── マストヘッド ─────────────────────────────── */
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 60px 0 30px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 44px;
+  }
+
+  .meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 20px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--ink-2);
+  }
+  .meta dt {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .28em;
+  }
+  .meta dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    word-break: break-all;
+  }
+
+  /* ── 結論パネル ───────────────────────────────── */
+  .verdict {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .verdict-label {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+  .verdict-headline {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 3.6vw, 25px);
+    font-weight: 600;
+    line-height: 1.5;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  .verdict p { color: var(--ink-2); font-size: 15px; }
+
+  /* ── 表 ──────────────────────────────────────── */
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 520px;
+    font-size: 14.5px;
+    line-height: 1.7;
+  }
+
+  caption {
+    text-align: left;
+    font-size: 13px;
+    color: var(--ink-3);
+    padding: 0 0 8px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  thead th {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--ink-3);
+    background: var(--surface-2);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  tbody tr:last-child th,
+  tbody tr:last-child td { border-bottom: 0; }
+
+  tbody th {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  td.num, th.num { font-variant-numeric: tabular-nums; }
+  td.mono, th.mono {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+
+  /* ── 判定ピル ─────────────────────────────────── */
+  .pill {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.5;
+    padding: 2px 9px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .pill-ok   { background: var(--ok-soft);   color: var(--ok); }
+  .pill-warn { background: var(--warn-soft); color: var(--warn); }
+  .pill-crit { background: var(--crit-soft); color: var(--crit); }
+
+  /* ── 箇条書き ─────────────────────────────────── */
+  .points {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .points > li {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-left: 16px;
+    border-left: 2px solid var(--rule-strong);
+  }
+  .points p { font-size: 15px; color: var(--ink-2); }
+
+  /* ── 手順（唯一の連番） ───────────────────────── */
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .steps > li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 4px 14px;
+    align-items: baseline;
+  }
+  .steps > li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    letter-spacing: .04em;
+  }
+  .steps > li > * { grid-column: 2; }
+  .steps p { font-size: 15px; color: var(--ink-2); }
+
+  /* ── コードブロック ───────────────────────────── */
+  pre {
+    margin: 0;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 12.8px;
+    line-height: 1.75;
+    color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+    white-space: pre;
+    word-break: normal;
+  }
+  pre .c { color: var(--ink-3); }
+
+  /* ── 注記 ────────────────────────────────────── */
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--warn);
+    border-radius: 4px;
+    padding: 16px 18px;
+    font-size: 14.5px;
+    color: var(--ink-2);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .note strong { color: var(--ink); }
+
+  /* ── 出典 ────────────────────────────────────── */
+  .sources {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: 13.5px;
+  }
+  .sources li { color: var(--ink-3); }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 12.5px;
+    color: var(--ink-3);
+    line-height: 1.7;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 560px) {
+    body { font-size: 15.5px; }
+    .wrap { padding: 0 18px 72px; }
+    .meta { grid-template-columns: 1fr; gap: 2px; }
+    .meta dt { padding-top: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">技術調査レポート</p>
+    <h1>faceman2 を iOS アプリ化する</h1>
+    <dl class="meta">
+      <dt>対象</dt>
+      <dd>git@github.com:sugie/faceman2.git — Laravel 12 / PHP ^8.2</dd>
+      <dt>調査日</dt>
+      <dd>2026-08-08</dd>
+      <dt>開発機</dt>
+      <dd>Windows 11（現用） → MacBook Air 13" M4 / RAM 32GB（ビルド機）</dd>
+      <dt>規模</dt>
+      <dd>app 約 990 行 / views 約 920 行 / migrations 約 750 行</dd>
+    </dl>
+  </header>
+
+  <main>
+
+    <!-- ══ 結論 ══════════════════════════════════ -->
+    <section>
+      <div class="verdict">
+        <p class="verdict-label">結論</p>
+        <p class="verdict-headline">NativePHP for Mobile v3 を採用し、Laravel をそのまま iPhone 上で動かす</p>
+        <p>v3 が 2026年2月に MIT ライセンスで無料化された（旧版は有料）。このアプリは外部通信を必要としない自己完結型の診断アプリなので、サーバーを一切立てずにデバイス内で完動させられる。既存の Blade / Livewire / Eloquent はほぼそのまま再利用できる。</p>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">項目</th>
+              <th scope="col">判定</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">推奨方式</th>
+              <td>NativePHP for Mobile v3</td>
+            </tr>
+            <tr>
+              <th scope="row">ライセンス費用</th>
+              <td><span class="pill pill-ok">無料</span> コア機能は MIT。一部プラグインのみ有料</td>
+            </tr>
+            <tr>
+              <th scope="row">MacBook Air M4</th>
+              <td><span class="pill pill-ok">要件充足</span> 「Apple Silicon M1 以降」を満たす</td>
+            </tr>
+            <tr>
+              <th scope="row">サーバー</th>
+              <td><span class="pill pill-ok">不要</span> 全処理がデバイス内で完結</td>
+            </tr>
+            <tr>
+              <th scope="row">既存コード再利用</th>
+              <td><span class="pill pill-ok">高</span> 実質的な修正は 4 行</td>
+            </tr>
+            <tr>
+              <th scope="row">Windows でのビルド</th>
+              <td><span class="pill pill-crit">不可</span> Xcode は macOS 専用。Mac 必須</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══ 適合理由 ═══════════════════════════════ -->
+    <section>
+      <h2>なぜこのアプリが NativePHP 向きなのか</h2>
+      <p>コードを読んだ結果、移植に有利な条件が偶然そろっていた。</p>
+
+      <ul class="points">
+        <li>
+          <h3>完全に自己完結している</h3>
+          <p>BikeFit の診断ロジック（<code>BfWeight::getDiagnostic</code> → <code>getBestOne</code> → <code>getResultDescription</code>）は外部 API を一切呼ばない。ログインも決済もない。つまりオフラインで完動する。</p>
+        </li>
+        <li>
+          <h3>アセットビルドの罠がない</h3>
+          <p><code>layouts/app.blade.php</code> も <code>bikefit/index.blade.php</code> も <code>&lt;style&gt;</code> 直書きで、Vite に依存していない。<code>public/build/</code> も存在しない。ここでハマる要素がない。</p>
+        </li>
+        <li>
+          <h3>問診データが migration に入っている</h3>
+          <p>これが効く。NativePHP は「アプリ起動のたびに必要に応じて migration を実行」する仕様なので、<code>2025_10_26_010000_seed_bikefit.php</code> の質問・選択肢・重み付けが初回起動時に自動で入る。seeder を別途動かす仕組みを作らなくてよい。</p>
+        </li>
+        <li>
+          <h3>規模が小さい</h3>
+          <p>合計 2,700 行程度。詰まったときに方式を捨てて別ルートへ切り替えても傷が浅い。</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ══ 障害 ═══════════════════════════════════ -->
+    <section>
+      <h2>移植の障害</h2>
+      <p>NativePHP は <strong>SQLite のみ</strong>対応で、MySQL は使えない。「アプリは逆コンパイルできるので DB 認証情報を埋め込ませない」という意図的な設計判断による。この前提で既存コードを全件当たった結果が次のとおり。</p>
+
+      <div class="table-scroll">
+        <table>
+          <caption>MySQL 依存箇所の SQLite 互換性</caption>
+          <thead>
+            <tr>
+              <th scope="col">箇所</th>
+              <th scope="col">内容</th>
+              <th scope="col">SQLite での結果</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">bikefit_schema.php:23, 38<br>tyukosyaerabi_schema.php:23, 38</td>
+              <td><code>DB::statement("ALTER TABLE … COMMENT …")</code> × 4</td>
+              <td><span class="pill pill-crit">要修正</span> エラーになる。唯一の実害</td>
+            </tr>
+            <tr>
+              <td class="mono">各 migration</td>
+              <td><code>-&gt;comment('匿名ユーザー識別ID')</code> 等</td>
+              <td><span class="pill pill-ok">無害</span> 無視されるだけ</td>
+            </tr>
+            <tr>
+              <td class="mono">各 migration</td>
+              <td><code>enum('license', […])</code> 等</td>
+              <td><span class="pill pill-ok">動作</span> Laravel が varchar + check に変換</td>
+            </tr>
+            <tr>
+              <td class="mono">各 migration</td>
+              <td><code>json('preferences')</code> 等</td>
+              <td><span class="pill pill-ok">動作</span> SQLite の JSON サポートで通る</td>
+            </tr>
+            <tr>
+              <td class="mono">AnswerController.php:33</td>
+              <td><code>DB::select("SELECT id FROM bf_questions ORDER BY id")</code></td>
+              <td><span class="pill pill-ok">動作</span> 標準 SQL のためそのまま通る</td>
+            </tr>
+            <tr>
+              <td class="mono">.env</td>
+              <td><code>SESSION_DRIVER=file</code> によるセッション駆動ウィザード</td>
+              <td><span class="pill pill-ok">動作</span> 1端末1ユーザーなので問題なし</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>修正は 4 箇所のみ。ドライバ判定で囲めば、Docker 側の MySQL 開発環境を壊さずに両立できる。</p>
+
+<pre><code><span class="c">// database/migrations/2025_10_26_000000_create_bikefit_schema.php</span>
+if (DB::getDriverName() === 'mysql') {
+    DB::statement("ALTER TABLE bf_users COMMENT 'Bike fit users'");
+}</code></pre>
+
+      <div class="note">
+        <p><strong>Docker 一式は iOS ビルドには不要。</strong></p>
+        <p>fm2_httpd（6344）/ fm2_mysql（6342）/ fm2_phpmyadmin（6343）/ fm2_redis（6345）は Windows 側の開発環境としてそのまま残す。Mac 側の iOS ビルドでは一切使わない。</p>
+      </div>
+    </section>
+
+    <!-- ══ 方式比較 ═══════════════════════════════ -->
+    <section>
+      <h2>方式の比較</h2>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">方式</th>
+              <th scope="col">既存コード再利用</th>
+              <th scope="col">サーバー</th>
+              <th scope="col">App Store 審査リスク</th>
+              <th scope="col">工数</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">NativePHP for Mobile<br><span class="pill pill-ok">推奨</span></th>
+              <td>ほぼ全部</td>
+              <td>不要</td>
+              <td><span class="pill pill-warn">低〜中</span></td>
+              <td>小</td>
+            </tr>
+            <tr>
+              <th scope="row">WebView ラッパー<br>（Capacitor）</th>
+              <td>全部</td>
+              <td>必要（ホスティング費用）</td>
+              <td><span class="pill pill-crit">高</span></td>
+              <td>小</td>
+            </tr>
+            <tr>
+              <th scope="row">SPA + Laravel API に<br>作り直し</th>
+              <td>Blade は捨てる</td>
+              <td>必要</td>
+              <td><span class="pill pill-ok">低</span></td>
+              <td>大</td>
+            </tr>
+            <tr>
+              <th scope="row">PWA<br>（ホーム画面に追加）</th>
+              <td>全部</td>
+              <td>必要</td>
+              <td>—（App Store 非経由）</td>
+              <td>極小</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Capacitor によるラッパーは、Apple の「Safari で見るのと十分に違わない体験のアプリは App Store にふさわしくない」というガイドライン 4.2 に真正面から当たる。逆に NativePHP はコンテンツがアプリに同梱されオフライン動作するため、この点で有利。ただしゼロリスクではない。</p>
+    </section>
+
+    <!-- ══ 手順 ═══════════════════════════════════ -->
+    <section>
+      <h2>Mac 側の実行手順</h2>
+
+      <h3>環境要件（公式）</h3>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">要件</th>
+              <th scope="col">内容</th>
+              <th scope="col">現状</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">ハードウェア</th>
+              <td>Apple Silicon M1 以降の Mac</td>
+              <td><span class="pill pill-ok">充足</span> M4</td>
+            </tr>
+            <tr>
+              <th scope="row">Xcode</th>
+              <td>16.0 以降 + Command Line Tools</td>
+              <td><span class="pill pill-warn">要導入</span></td>
+            </tr>
+            <tr>
+              <th scope="row">パッケージ管理</th>
+              <td>Homebrew, CocoaPods</td>
+              <td><span class="pill pill-warn">要導入</span></td>
+            </tr>
+            <tr>
+              <th scope="row">PHP</th>
+              <td>8.3 以上</td>
+              <td><span class="pill pill-ok">対応可</span> <code>"php": "^8.2"</code> のため composer.json の変更不要</td>
+            </tr>
+            <tr>
+              <th scope="row">Laravel</th>
+              <td>11 以上</td>
+              <td><span class="pill pill-ok">充足</span> Laravel 12</td>
+            </tr>
+            <tr>
+              <th scope="row">Apple Developer<br>Program（$99/年）</th>
+              <td>シミュレータ動作確認には<strong>不要</strong>。実機テスト・App Store 配信・プッシュ通知で必要</td>
+              <td><span class="pill pill-warn">要判断</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>手順</h3>
+      <ol class="steps">
+        <li>
+          <h3>Windows 側で SQLite 互換化を済ませ、push する</h3>
+          <p><code>DB::statement</code> の 4 行をドライバ判定で囲む。Mac に渡る前に潰しておくと、向こうでの初回ビルドが素直に通る。</p>
+        </li>
+        <li>
+          <h3>Mac に Xcode と周辺ツールを入れる</h3>
+<pre><code>xcode-select --install
+brew install cocoapods</code></pre>
+        </li>
+        <li>
+          <h3>クローンして依存を解決する</h3>
+          <p><code>.env</code> は gitignore されているためクローンには含まれない。Mac 側で新規に作成する必要がある。</p>
+<pre><code>git clone git@github.com:sugie/faceman2.git
+cd faceman2
+composer install</code></pre>
+        </li>
+        <li>
+          <h3>NativePHP を導入する</h3>
+          <p><code>.env</code> に <code>NATIVEPHP_APP_ID=com.sugie.faceman2</code> を追記してから installer を走らせる。</p>
+<pre><code>composer require nativephp/mobile
+php artisan native:install</code></pre>
+        </li>
+        <li>
+          <h3>iOS シミュレータで起動する</h3>
+          <p>ここまで Apple Developer 登録なしで到達できる。</p>
+<pre><code>php artisan native:run</code></pre>
+        </li>
+      </ol>
+
+      <div class="note">
+        <p><strong>最初のマイルストーン</strong></p>
+        <p>シミュレータ上で <code>/bikefit</code> の診断フローが最初の質問から結果表示まで一周すること。ここが通れば、方式選択が正しかったことの証明になる。</p>
+      </div>
+    </section>
+
+    <!-- ══ 次のアクション ═════════════════════════ -->
+    <section>
+      <h2>次のアクションと未決事項</h2>
+
+      <p>Windows 側（現時点）で先に済ませておくと、Mac での作業が楽になるものが 2 つある。</p>
+
+      <ul class="points">
+        <li>
+          <h3>SQLite 互換化</h3>
+          <p><code>DB::statement</code> の 4 行をドライバ判定で囲む。Docker の MySQL 環境は壊さない形で。着手可能。</p>
+        </li>
+        <li>
+          <h3>.env の扱いを決める</h3>
+          <p><code>.env</code> は gitignore のため Mac のクローンには来ない。NativePHP 用の設定値も含め、Mac 側で何を書くべきかを控えておく必要がある。</p>
+        </li>
+      </ul>
+
+      <div class="note">
+        <p><strong>判断が必要な点：App Store 公開を目指すか、自分の iPhone で動けば十分か。</strong></p>
+        <p>前者なら Apple Developer Program の登録（$99/年）とガイドライン 4.2 対策（ネイティブ機能の追加）を計画に織り込む必要がある。後者ならシミュレータと実機デバッグで完結し、費用も期間も大幅に軽くなる。ここが決まると以降の設計方針が変わる。</p>
+      </div>
+    </section>
+
+    <!-- ══ 出典 ═══════════════════════════════════ -->
+    <section>
+      <h2>出典</h2>
+      <ul class="sources">
+        <li><a href="https://nativephp.com/mobile">NativePHP for iOS and Android</a></li>
+        <li><a href="https://nativephp.com/docs/mobile/3/getting-started/installation">Installation — NativePHP mobile v3</a></li>
+        <li><a href="https://nativephp.com/docs/mobile/3/getting-started/environment-setup">Environment Setup — NativePHP mobile v3</a></li>
+        <li><a href="https://nativephp.com/docs/mobile/3/concepts/databases">Databases — NativePHP mobile v3</a></li>
+        <li><a href="https://laravel-news.com/nativephp-for-mobile-is-now-free">NativePHP for Mobile is Now Free — Laravel News</a></li>
+        <li><a href="https://www.mobiloud.com/blog/app-store-review-guidelines-webview-wrapper">App Store Review Guidelines: Will Your Webview App Be Rejected?</a></li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>本レポートは faceman2 リポジトリの静的解析と NativePHP 公式ドキュメントの参照に基づく。行番号・規模はいずれも 2026-08-08 時点の main ブランチ（6b0c575）のもの。</p>
+  </footer>
+
+</div>
+</body>
+</html>

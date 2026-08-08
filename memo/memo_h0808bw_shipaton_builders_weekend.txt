@@ -1,0 +1,69 @@
+Shipaton Builders Weekend  2026-08-08(土)
+https://palaner.com/events/luma-7f6badac68
+
+App Name : Find My Motorcycle
+Name     : スギエ / Sugie
+実機     : iPhone 12 mini (TestFlight 配信済みの実績あり)
+
+締切 16:00 / 実機で動かすのは 15:30 目標
+
+
+== 方式 ==
+Laravel /bikefit を Swift ネイティブ (SwiftUI) に移植。
+サーバ・DB・外部ライブラリ すべて不要。単体で完結する。
+
+Laravel 側の DB は全部ただの配列引きだったので、
+問診データ 705 件を Swift のリテラルに変換済み。
+
+
+== Windows 側で準備済みのもの ==
+ios/BikeFitData.swift    204行  問診データ+診断結果文+採点関数 (自動生成)
+ios/BikeFitApp.swift     289行  SwiftUI 3画面 (トップ/質問/結果)
+ios/Assets.xcassets      24MB   ジャンル画像15枚 + AppIcon(1024/アルファなし)
+tools/gen_swift_data.mjs        migration から Swift を再生成
+tools/make_ios_assets.ps1       Assets.xcassets を再生成
+
+
+== Mac 手順 ==
+[ ] 1. git clone git@github.com:sugie/faceman2.git     (composer install は不要)
+
+[ ] 2. Xcode で新規プロジェクト
+       iOS / App / SwiftUI / Swift
+       Product Name : FindMyMotorcycle
+       ※ 名前に空白を入れない。表示名は手順4で設定する。
+
+[ ] 3. Xcode が作った下記2つを削除 (Move to Trash)
+         ContentView.swift
+         FindMyMotorcycleApp.swift
+         Assets.xcassets
+       ※ @main が重複するとビルドが通らないので必ず先に消す。
+
+[ ] 4. 下記3つをプロジェクトにドラッグ (Copy items if needed にチェック)
+         ios/BikeFitData.swift
+         ios/BikeFitApp.swift
+         ios/Assets.xcassets
+
+[ ] 5. ターゲット設定
+         Display Name : Find My Motorcycle
+         Bundle ID    : com.sugie.findmymotorcycle  (TestFlight の登録に合わせる)
+
+[ ] 6. Cmd+R でシミュレータ確認 → 実機 → Archive → TestFlight
+
+
+== 詰まったら ==
+・@main が重複 → 手順3 の削除もれ。
+・画像が出ない → Assets の名前が 8010〜8150 になっているか。
+                 画像なしでもアプリは動く (UIImage(named:) で存在確認している)。
+・ビルドエラー → Swift は Windows でコンパイル検証できていないので
+                 初回は多少出るかもしれない。SwiftUI の基本APIしか使っていない。
+
+
+== デモの注意 ==
+診断結果はネイキッドに寄る (加点合計 1020点。最少のレーサーレプリカは 90点)。
+何度か回すと同じ結果が続く。問診票の設計そのものの話なので今回は触っていない。
+デモで散らしたいなら、事前に別ジャンルが出る回答パターンを1本用意しておく。
+
+
+== 参考 ==
+docs/ios_swift_plan.html      実行計画 (画像手順は自動化済みなので所要時間は短縮)
+docs/ios_migration_report.html  NativePHP 案の調査。不採用。

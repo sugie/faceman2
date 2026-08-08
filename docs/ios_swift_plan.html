@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find My Motorcycle — Mac 引き渡し・ビルド実行計画</title>
+<style>
+  /* ── トークン: 明（既定） ───────────────────────────── */
+  :root {
+    --ground:      #f1f4f4;
+    --surface:     #ffffff;
+    --surface-2:   #e5eaeb;
+    --ink:         #121a1c;
+    --ink-2:       #47545a;
+    --ink-3:       #74838a;
+    --rule:        #d2dbdd;
+    --rule-strong: #b3c0c3;
+    --accent:      #0d6d7c;
+    --accent-ink:  #08525e;
+    --accent-soft: #dceff2;
+
+    --ok:          #1a6b4a;
+    --ok-soft:     #dcefe4;
+    --warn:        #8a5a06;
+    --warn-soft:   #f8ecd4;
+    --crit:        #a32c22;
+    --crit-soft:   #f7ddda;
+
+    --shadow:      0 1px 2px rgba(18, 26, 28, .06);
+
+    --font-display: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", "Songti SC", Georgia, serif;
+    --font-body:    "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", Meiryo, "Noto Sans JP", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono:    ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas, "Noto Sans Mono", monospace;
+
+    --measure: 820px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0d1315;
+      --surface:     #141c1f;
+      --surface-2:   #1c262a;
+      --ink:         #e5edee;
+      --ink-2:       #a6b5b9;
+      --ink-3:       #7a8a8f;
+      --rule:        #293539;
+      --rule-strong: #3a4a4f;
+      --accent:      #56c4d6;
+      --accent-ink:  #8bdcea;
+      --accent-soft: #10333a;
+
+      --ok:          #4cc38a;
+      --ok-soft:     #122e23;
+      --warn:        #e0a53f;
+      --warn-soft:   #33270e;
+      --crit:        #ef7b6f;
+      --crit-soft:   #371a17;
+
+      --shadow:      0 1px 2px rgba(0, 0, 0, .4);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0d1315;
+    --surface:     #141c1f;
+    --surface-2:   #1c262a;
+    --ink:         #e5edee;
+    --ink-2:       #a6b5b9;
+    --ink-3:       #7a8a8f;
+    --rule:        #293539;
+    --rule-strong: #3a4a4f;
+    --accent:      #56c4d6;
+    --accent-ink:  #8bdcea;
+    --accent-soft: #10333a;
+
+    --ok:          #4cc38a;
+    --ok-soft:     #122e23;
+    --warn:        #e0a53f;
+    --warn-soft:   #33270e;
+    --crit:        #ef7b6f;
+    --crit-soft:   #371a17;
+
+    --shadow:      0 1px 2px rgba(0, 0, 0, .4);
+  }
+
+  /* ── ベース ───────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16.5px;
+    line-height: 1.85;
+    font-feature-settings: "palt" 1;
+  }
+
+  .wrap { max-width: var(--measure); margin: 0 auto; padding: 0 24px 96px; }
+
+  a { color: var(--accent); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--accent-ink); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: .86em;
+    background: var(--surface-2);
+    padding: .12em .38em;
+    border-radius: 3px;
+    word-break: break-word;
+  }
+
+  /* ── 見出し ───────────────────────────────────── */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(30px, 5.4vw, 42px);
+    line-height: 1.34;
+    letter-spacing: .01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(21px, 3.4vw, 26px);
+    line-height: 1.45;
+    text-wrap: balance;
+    margin: 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  h3 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: .02em;
+    line-height: 1.6;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  p { margin: 0; }
+
+  main    { display: flex; flex-direction: column; gap: 52px; }
+  section { display: flex; flex-direction: column; gap: 18px; }
+
+  /* ── マストヘッド ─────────────────────────────── */
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 60px 0 30px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 44px;
+  }
+
+  .meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 20px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--ink-2);
+  }
+  .meta dt {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .28em;
+  }
+  .meta dd { margin: 0; font-variant-numeric: tabular-nums; word-break: break-word; }
+
+  /* ── 結論パネル ───────────────────────────────── */
+  .verdict {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .verdict-label {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+  .verdict-headline {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 3.6vw, 25px);
+    font-weight: 600;
+    line-height: 1.5;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  .verdict p { color: var(--ink-2); font-size: 15px; }
+
+  /* ── 時間サマリー ─────────────────────────────── */
+  .budget {
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .budget-cell {
+    flex: 1 1 140px;
+    padding: 18px 20px;
+    border-right: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .budget-cell:last-child { border-right: 0; }
+  .budget-key {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .budget-val {
+    font-family: var(--font-display);
+    font-size: 27px;
+    font-weight: 600;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .budget-val.is-accent { color: var(--accent); }
+  .budget-note { font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+
+  /* ── 表 ──────────────────────────────────────── */
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 520px;
+    font-size: 14.5px;
+    line-height: 1.7;
+  }
+
+  caption { text-align: left; font-size: 13px; color: var(--ink-3); padding: 0 0 8px; }
+
+  th, td {
+    text-align: left;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  thead th {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--ink-3);
+    background: var(--surface-2);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  tbody tr:last-child th,
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody th { font-weight: 600; color: var(--ink); }
+
+  td.num, th.num { font-variant-numeric: tabular-nums; text-align: right; }
+  td.mono, th.mono { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; }
+  td.nowrap { white-space: nowrap; }
+
+  /* ── 判定ピル ─────────────────────────────────── */
+  .pill {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.5;
+    padding: 2px 9px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .pill-ok   { background: var(--ok-soft);   color: var(--ok); }
+  .pill-warn { background: var(--warn-soft); color: var(--warn); }
+  .pill-crit { background: var(--crit-soft); color: var(--crit); }
+
+  /* ── 箇条書き ─────────────────────────────────── */
+  .points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+  .points > li {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-left: 16px;
+    border-left: 2px solid var(--rule-strong);
+  }
+  .points p { font-size: 15px; color: var(--ink-2); }
+
+  /* ── 手順（連番は順序に意味がある所だけ） ─────── */
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .steps > li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 8px 14px;
+    align-items: baseline;
+  }
+  .steps > li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    letter-spacing: .04em;
+  }
+  .steps > li > * { grid-column: 2; }
+  .steps p { font-size: 15px; color: var(--ink-2); }
+
+  .step-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+  .time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .06em;
+    color: var(--ink-3);
+    background: var(--surface-2);
+    border-radius: 3px;
+    padding: 1px 7px;
+    white-space: nowrap;
+  }
+
+  /* ── コードブロック ───────────────────────────── */
+  pre {
+    margin: 0;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 12.8px;
+    line-height: 1.75;
+    color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; white-space: pre; word-break: normal; }
+  pre .c { color: var(--ink-3); }
+
+  /* ── 注記 ────────────────────────────────────── */
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--warn);
+    border-radius: 4px;
+    padding: 16px 18px;
+    font-size: 14.5px;
+    color: var(--ink-2);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .note strong { color: var(--ink); }
+  .note-crit { border-left-color: var(--crit); }
+  .note-ok   { border-left-color: var(--ok); }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 12.5px;
+    color: var(--ink-3);
+    line-height: 1.7;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 560px) {
+    body { font-size: 15.5px; }
+    .wrap { padding: 0 18px 72px; }
+    .meta { grid-template-columns: 1fr; gap: 2px; }
+    .meta dt { padding-top: 10px; }
+    .budget-cell { border-right: 0; border-bottom: 1px solid var(--rule); }
+    .budget-cell:last-child { border-bottom: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">実行計画 — Shipaton Builders Weekend</p>
+    <h1>Find My Motorcycle を Mac でビルドして iPhone 12 mini に載せる</h1>
+    <dl class="meta">
+      <dt>アプリ名</dt>
+      <dd>Find My Motorcycle</dd>
+      <dt>発表者</dt>
+      <dd>スギエ / Sugie</dd>
+      <dt>締切</dt>
+      <dd>16:00（実機で動かすのは 15:30 目標）</dd>
+      <dt>方式</dt>
+      <dd>SwiftUI 単体。サーバ・DB・外部ライブラリ すべて不要</dd>
+      <dt>移植元</dt>
+      <dd>faceman2 / Laravel 12 の <code>/bikefit</code></dd>
+    </dl>
+  </header>
+
+  <main>
+
+    <!-- ══ 現在地 ═══════════════════════════════ -->
+    <section>
+      <div class="verdict">
+        <p class="verdict-label">現在地</p>
+        <p class="verdict-headline">Windows 側の準備は完了。残るは Mac での Xcode 作業のみ</p>
+        <p>問診データ 705 件の Swift 変換、SwiftUI 3 画面、アセットカタログ（画像 15 枚 + アプリアイコン）はすべて生成・検証済み。Mac 側でコードを書く必要はない。</p>
+      </div>
+
+      <div class="budget">
+        <div class="budget-cell">
+          <span class="budget-key">Mac 実働</span>
+          <span class="budget-val is-accent">約 39 分</span>
+          <span class="budget-note">TestFlight 配信まで含む</span>
+        </div>
+        <div class="budget-cell">
+          <span class="budget-key">動くまで</span>
+          <span class="budget-val">17 分</span>
+          <span class="budget-note">clone 〜 シミュレータ</span>
+        </div>
+        <div class="budget-cell">
+          <span class="budget-key">外部依存</span>
+          <span class="budget-val">0</span>
+          <span class="budget-note">SwiftUI のみ</span>
+        </div>
+        <div class="budget-cell">
+          <span class="budget-key">Mac で書くコード</span>
+          <span class="budget-val">0 行</span>
+          <span class="budget-note">配置するだけ</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ リポジトリ判断 ═════════════════════════ -->
+    <section>
+      <h2>リポジトリ：新規作成は不要</h2>
+      <p><code>sugie/faceman2</code> が既に存在し、同期済みで、しかも PUBLIC だった。新しく作る理由が今日はない。</p>
+
+      <div class="table-scroll">
+        <table>
+          <caption>既存リポジトリの状態（確認済み）</caption>
+          <thead>
+            <tr><th scope="col">項目</th><th scope="col">状態</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">リモート</th><td class="mono">git@github.com:sugie/faceman2.git</td></tr>
+            <tr><th scope="row">疎通</th><td><span class="pill pill-ok">OK</span> Windows から確認済み</td></tr>
+            <tr><th scope="row">公開設定</th><td><strong>PUBLIC</strong></td></tr>
+            <tr><th scope="row">同期状態</th><td>ローカル <code>main</code> = <code>origin/main</code>（6b0c575）</td></tr>
+            <tr><th scope="row">サイズ</th><td class="num">66 MB</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="points">
+        <li>
+          <h3>PUBLIC なので Mac 側の認証が要らない — これが一番効く</h3>
+          <p>Windows の SSH 鍵は Mac にはない。<code>origin</code> は SSH URL だが、public リポジトリなら <strong>HTTPS で clone すれば認証ゼロ</strong>で通る。鍵の設定でハマる時間をまるごと回避できる。</p>
+        </li>
+        <li>
+          <h3>新規リポジトリ作成は今日やらない</h3>
+          <p>5〜10 分かかって、今日得るものがない。整理はイベント後で足りる。</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ══ 引き渡し ═══════════════════════════════ -->
+    <section>
+      <h2>Windows → Mac の引き渡し</h2>
+
+      <ol class="steps">
+        <li>
+          <div class="step-head">
+            <h3>Windows から push する</h3>
+            <span class="time">2 分</span>
+          </div>
+<pre><code>git add ios/ tools/ docs/ memo/ CLAUDE.md
+git commit -m "Find My Motorcycle: Laravel診断をSwiftネイティブへ移植"
+git push</code></pre>
+        </li>
+
+        <li>
+          <div class="step-head">
+            <h3>Mac で clone する — HTTPS + 履歴なし</h3>
+            <span class="time">3 分</span>
+          </div>
+          <p><code>--depth 1</code> で過去の 66MB を引かずに済む。<code>composer install</code> は不要。iOS 側は Laravel に一切依存しない。</p>
+<pre><code>git clone --depth 1 https://github.com/sugie/faceman2.git
+cd faceman2</code></pre>
+        </li>
+      </ol>
+
+      <div class="note note-ok">
+        <p><strong>保険：git が詰まったら <code>ios/</code> だけ渡せばいい。</strong></p>
+        <p>Mac 側が必要とするのは <code>ios/</code> フォルダ（25MB）のみ。Laravel 本体も Docker も composer も使わない。USB メモリでも iCloud でも、何らかの手段で <code>ios/</code> が Mac に届けばビルドできる。git でハマったら即座にこちらへ切り替える。</p>
+      </div>
+    </section>
+
+    <!-- ══ Xcode 手順 ═════════════════════════════ -->
+    <section>
+      <h2>Mac での Xcode 手順</h2>
+
+      <ol class="steps">
+        <li>
+          <div class="step-head">
+            <h3>新規プロジェクトを作る</h3>
+            <span class="time">6 分</span>
+          </div>
+          <p>iOS / App / インターフェイスは <strong>SwiftUI</strong> / 言語は Swift。<br>
+          Product Name は <code>FindMyMotorcycle</code>（<strong>空白を入れない</strong>。表示名は手順 04 で設定する）。</p>
+        </li>
+
+        <li>
+          <div class="step-head">
+            <h3>Xcode が自動生成した 3 つを削除する</h3>
+            <span class="time">1 分</span>
+          </div>
+          <p><code>ContentView.swift</code> / <code>FindMyMotorcycleApp.swift</code> / <code>Assets.xcassets</code> を Move to Trash。<br>
+          <strong>必ず先に消すこと。</strong><code>@main</code> が重複するとビルドが通らない。</p>
+        </li>
+
+        <li>
+          <div class="step-head">
+            <h3>用意した 3 つをドラッグする</h3>
+            <span class="time">2 分</span>
+          </div>
+          <p>「Copy items if needed」にチェックを入れて放り込む。</p>
+<pre><code>ios/BikeFitData.swift
+ios/BikeFitApp.swift
+ios/Assets.xcassets</code></pre>
+        </li>
+
+        <li>
+          <div class="step-head">
+            <h3>ターゲット設定</h3>
+            <span class="time">3 分</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th scope="col">項目</th><th scope="col">値</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Display Name</th><td>Find My Motorcycle</td></tr>
+                <tr><th scope="row">Bundle Identifier</th><td class="mono">com.sugie.findmymotorcycle</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Bundle ID は TestFlight 側の登録に合わせる。</p>
+        </li>
+
+        <li>
+          <div class="step-head">
+            <h3>シミュレータで確認</h3>
+            <span class="time">5 分</span>
+          </div>
+          <p>⌘R。ここが最初の関門。<strong>Swift のコンパイル未検証ぶんの余裕をここに取ってある。</strong></p>
+        </li>
+
+        <li>
+          <div class="step-head">
+            <h3>実機 → Archive → TestFlight</h3>
+            <span class="time">20 分</span>
+          </div>
+          <p>電卓アプリで実証済みの経路。アプリアイコンは同梱済みなのでアップロード時の検証で止まらない。</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ══ 準備済み ═══════════════════════════════ -->
+    <section>
+      <h2>準備済みのもの</h2>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">ファイル</th>
+              <th scope="col" class="num">規模</th>
+              <th scope="col">内容</th>
+              <th scope="col">状態</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">ios/BikeFitData.swift</td>
+              <td class="num">204 行</td>
+              <td>問診データ + 診断結果文 + 採点関数。<strong>自動生成</strong></td>
+              <td class="nowrap"><span class="pill pill-ok">完了</span></td>
+            </tr>
+            <tr>
+              <td class="mono">ios/BikeFitApp.swift</td>
+              <td class="num">289 行</td>
+              <td>SwiftUI 3 画面（トップ / 質問 / 結果）</td>
+              <td class="nowrap"><span class="pill pill-ok">完了</span></td>
+            </tr>
+            <tr>
+              <td class="mono">ios/Assets.xcassets</td>
+              <td class="num">24 MB</td>
+              <td>ジャンル画像 15 枚 + AppIcon（1024 / アルファなし）</td>
+              <td class="nowrap"><span class="pill pill-ok">完了</span></td>
+            </tr>
+            <tr>
+              <td class="mono">tools/gen_swift_data.mjs</td>
+              <td class="num">167 行</td>
+              <td>migration から Swift を再生成</td>
+              <td class="nowrap"><span class="pill pill-ok">完了</span></td>
+            </tr>
+            <tr>
+              <td class="mono">tools/make_ios_assets.ps1</td>
+              <td class="num">107 行</td>
+              <td>Assets.xcassets を再生成</td>
+              <td class="nowrap"><span class="pill pill-ok">完了</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>移植の根拠：SQL は全部ただの配列引きだった</h3>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Laravel の処理</th>
+              <th scope="col">Swift での置き換え</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">DB::select("SELECT id FROM bf_questions ORDER BY id")</td>
+              <td>配列の添字</td>
+            </tr>
+            <tr>
+              <td class="mono">BfWeight::where(question_id)-&gt;where(option_id)-&gt;get()</td>
+              <td><code>choice.scores</code>（15 要素の配列）</td>
+            </tr>
+            <tr>
+              <td class="mono">BfAnswer::where(bf_diagnosis_id)-&gt;get()</td>
+              <td><code>@State var picked: [Choice]</code></td>
+            </tr>
+            <tr>
+              <td class="mono">bf_users / bf_diagnoses への保存</td>
+              <td><span class="pill pill-ok">削除</span> 結果に影響しない</td>
+            </tr>
+            <tr>
+              <td class="mono">bf_diagnosis_scores / bf_recommendations</td>
+              <td><span class="pill pill-ok">削除</span> どこからも読まれていない</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>データ総量は質問 11 / 選択肢 47 / ジャンル 15 / 重み 705（47 × 15 の密なマトリクス、値は 0・30・40・50 の 4 種のみ）。合計 16KB。採点は Laravel 版と同一挙動（同点時は ID の小さい方）。</p>
+    </section>
+
+    <!-- ══ つぶした地雷 ═══════════════════════════ -->
+    <section>
+      <h2>先につぶしておいた地雷</h2>
+
+      <ul class="points">
+        <li>
+          <h3>アプリアイコンのアルファチャンネル</h3>
+          <p>App Store Connect はアルファ付きアイコンを弾く。24bit RGB で描き直して透過なしにした（生成後に検証済み）。TestFlight のアップロードで止まらない。</p>
+        </li>
+        <li>
+          <h3><code>@main</code> の重複</h3>
+          <p>Xcode はプロジェクト名から <code>FindMyMotorcycleApp</code> を自動生成する。こちらのエントリポイントは <code>MotorcycleApp</code> に改名して衝突を避けてある。</p>
+        </li>
+        <li>
+          <h3>画像の追加作業</h3>
+          <p>元画像が既に 1024×1024 だったのでリサイズ不要。<code>Contents.json</code> 込みで imageset を 15 個生成済み。当初 20 分と見ていた工程が <strong>フォルダ 1 個のドラッグ</strong>になった。</p>
+        </li>
+        <li>
+          <h3>iPhone 12 mini の画面幅 375pt</h3>
+          <p>トップのタイトルを 2 行組み + <code>minimumScaleFactor</code> で収まるようにした。</p>
+        </li>
+        <li>
+          <h3>画像がなくても落ちない</h3>
+          <p>結果画面は <code>UIImage(named:)</code> で存在を確認してから描画する。アセットを飛ばしてもアプリは完全に動く。</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ══ リスク ═════════════════════════════════ -->
+    <section>
+      <h2>残っているリスク</h2>
+
+      <div class="note note-crit">
+        <p><strong>Swift コードはコンパイル未検証。</strong></p>
+        <p>Windows に Swift ツールチェーンがないため構文チェックができていない。Mac での初回ビルドで細かいエラーが出る可能性がある。SwiftUI の基本 API しか使っていないので大崩れはしないはずだが、手順 05 に余裕を取ってある。<strong>ここが唯一の不確定要素。</strong></p>
+      </div>
+
+      <div class="note">
+        <p><strong>デモ時の注意：診断結果がネイキッドに寄る。</strong></p>
+        <p>加点合計はネイキッド 1020 点に対し、最少のレーサーレプリカは 90 点。全 15 ジャンルとも理論上は出るが、何度か回すと同じ結果が続く。問診票の設計そのものの話なので今回は触っていない。デモで散らしたいなら、別ジャンルが出る回答パターンを 1 本用意しておくのが最短。</p>
+      </div>
+
+      <div class="note">
+        <p><strong>イベント後の宿題（今は無視してよい）。</strong></p>
+        <p>このリポジトリは PUBLIC だが、<code>docker-compose.yml</code> に MySQL の root パスワードが、<code>docker_settings/httpd/_env_*</code> に APP_KEY などが平文でコミットされている。今日始まった問題ではなく既に公開済みの状態なので、今は止まらず進めてよい。イベント後にローテーションを検討する価値がある。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>本計画は faceman2 リポジトリ（main / 6b0c575）の静的解析と、Windows 側での生成・検証結果に基づく。件数・行数は 2026-08-08 時点のもの。<br>
+    先行して作成した <code>docs/ios_migration_report.html</code>（NativePHP 方式の調査）は不採用。判断の経緯として残してある。<br>
+    Mac 手順のチェックリスト版は <code>memo/memo_h0808bw_shipaton_builders_weekend.txt</code>。</p>
+  </footer>
+
+</div>
+</body>
+</html>
